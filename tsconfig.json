@@ -10,5 +10,9 @@
     "lib": ["esnext", "dom"],
     "resolveJsonModule": true
   },
+  "include": [
+    "src/**/*",
+    "environment.d.ts" // Asegúrate de que este archivo esté incluido
+  ],
   "exclude": ["node_modules"]
 }
