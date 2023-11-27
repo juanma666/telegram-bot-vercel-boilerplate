@@ -1,4 +1,4 @@
-import { Telegraf, Context, Scenes, session, MiddlewareFn } from 'telegraf';
+import { Telegraf, Context, Scenes, session, MiddlewareFn, Markup } from 'telegraf';
 import { about } from './commands';
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
@@ -34,33 +34,30 @@ interface MyContext extends TelegrafContext {
 const paymentWizard = new Scenes.WizardScene<MyContext>(
   'payment-wizard',
   async (ctx) => {
-    await ctx.reply('Hola! Bienvenido al bot de Erexit 3D. Ya has realizado el pago para entrar a nuestra comunidad? Si/No');
+    await ctx.reply(
+      'Hola! Bienvenido al bot de Erexit 3D. ¿Ya has realizado el pago para entrar a nuestra comunidad?',
+      Markup.inlineKeyboard([
+        Markup.button.callback('Sí', 'yes'),
+        Markup.button.callback('No', 'no')
+      ])
+    );
     (ctx.wizard.state as MyWizardSession).userState = UserState.ASKED_PAYMENT;
     return ctx.wizard.next();
   },
   async (ctx) => {
-    // Manejar respuesta del pago
-    // Asegúrate de que tienes un mensaje de texto antes de intentar acceder a 'text'
-    if (ctx.message && 'text' in ctx.message) {
-      const userResponse = ctx.message.text.toLowerCase();
-      if ('text' in ctx.message) {
-        const userResponse = ctx.message?.text?.toLowerCase();
-        if (userResponse === 'si') {
-          await ctx.reply('Perfecto, a través de qué medio has hecho el pago? Paypal/MercadoPago/Patreon');
-          (ctx.wizard.state as MyWizardSession).userState = UserState.SELECTED_PAYMENT_METHOD; // Cambio realizado aquí
-        } else {
-          await ctx.reply('Ok! Elige el método con el cual quieres hacer el pago: Paypal/Mercado Pago');
-          (ctx.wizard.state as MyWizardSession).userState = UserState.SELECTED_PAYMENT_METHOD; // Cambio realizado aquí
-        }
-        return ctx.wizard.next();
-      }
-      else {
-        await ctx.reply('No entendí tu respuesta. ¿Puedes decirme si ya realizaste el pago? Responde con "Si" o "No".');
-      }
-    } else {
-      // Manejar la situación cuando 'text' no está disponible
-      await ctx.reply('No pude entender el mensaje. ¿Podrías intentarlo de nuevo?');
-    }
+    // Este paso se manejará con botones, por lo que no es necesario aquí
+  },
+  async (ctx) => {
+    await ctx.reply(
+      'Perfecto, elige el método de pago:',
+      Markup.inlineKeyboard([
+        Markup.button.callback('Paypal', 'paypal'),
+        Markup.button.callback('MercadoPago', 'mercadopago'),
+        Markup.button.callback('Patreon', 'patreon')
+      ])
+    );
+    (ctx.wizard.state as MyWizardSession).userState = UserState.SELECTED_PAYMENT_METHOD;
+    return ctx.wizard.next();
   },
   async (ctx) => {
     // Recoger datos del usuario
@@ -91,10 +88,6 @@ const paymentWizard = new Scenes.WizardScene<MyContext>(
   }
 );
 
-if (process.env.ENVIRONMENT !== 'production') {
-  development(bot);
-}
-
 
 bot.use(session());
 const stage = new Scenes.Stage<MyContext>([paymentWizard], { default: 'payment-wizard' });
@@ -107,10 +100,11 @@ bot.command('start', (ctx) => {
 
 if (process.env.ENVIRONMENT !== 'production') {
   development(bot);
+} else {
+  // Solo inicia el bot en producción
+  bot.launch();
 }
 
 export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
   await production(req, res, bot);
 };
-
-process.env.ENVIRONMENT !== 'production' && development(bot);
