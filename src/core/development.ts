@@ -18,4 +18,8 @@ const development = async (bot: Telegraf<Context<Update>>) => {
   process.once('SIGTERM', () => bot.stop('SIGTERM'));
 };
 
-export { development };
+export const development = (bot: Telegraf<Context>) => {
+  // Solo inicia el polling en el entorno de desarrollo
+  bot.launch();
+  // Resto del código...
+};
