@@ -152,7 +152,7 @@ if (process.env.ENVIRONMENT !== 'production') {
   development(bot);
 } else {
   // Solo inicia el bot en producción
-  //bot.launch();
+  bot.launch();
 }
 
 export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
