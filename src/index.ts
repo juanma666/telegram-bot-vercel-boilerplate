@@ -4,6 +4,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { development, production } from './core';
 import { Context as TelegrafContext } from 'telegraf';
 
+
 require('dotenv').config();
 
 const BOT_TOKEN = process.env.BOT_TOKEN || '';
@@ -88,6 +89,21 @@ const paymentWizard = new Scenes.WizardScene<MyContext>(
   }
 );
 
+const rateLimit = (limit: number, interval: number): MiddlewareFn<Context> => {
+  let lastCalled = Date.now();
+
+  return async (ctx, next) => {
+    if (Date.now() - lastCalled < interval) {
+      await ctx.reply(`Por favor, espera ${interval / 1000} segundos antes de intentar de nuevo.`);
+      return;
+    }
+    lastCalled = Date.now();
+    await next();
+  };
+};
+
+bot.use(rateLimit(1, 5000)); // Limita a 1 solicitud cada 5 segundos
+
 bot.action('yes', async (ctx) => {
   const myCtx = ctx as unknown as MyContext; // Conversión doble
   await myCtx.reply('Has seleccionado Sí. Elige tu método de pago:');
@@ -123,8 +139,13 @@ const stage = new Scenes.Stage<MyContext>([paymentWizard], { default: 'payment-w
 bot.use(stage.middleware() as MiddlewareFn<Context>);
 
 bot.command('about', about());
-bot.command('start', (ctx) => {
-  (ctx as unknown as MyContext).scene.enter('payment-wizard');
+bot.command('start', async (ctx) => {
+  try {
+    (ctx as unknown as MyContext).scene.enter('payment-wizard');
+  } catch (error) {
+    console.error(error);
+    await ctx.reply('Ocurrió un error, por favor intenta de nuevo.');
+  }
 });
 
 if (process.env.ENVIRONMENT !== 'production') {
@@ -135,5 +156,10 @@ if (process.env.ENVIRONMENT !== 'production') {
 }
 
 export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
-  await production(req, res, bot);
+  try {
+    await production(req, res, bot);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('Error interno del servidor');
+  }
 };
