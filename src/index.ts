@@ -148,6 +148,8 @@ bot.command('start', async (ctx) => {
   }
 });
 
+bot.telegram.deleteWebhook();
+
 if (process.env.ENVIRONMENT !== 'production') {
   development(bot);
 } else {
