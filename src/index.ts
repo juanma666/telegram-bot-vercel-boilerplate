@@ -148,14 +148,11 @@ bot.command('start', async (ctx) => {
   }
 });
 
-bot.telegram.deleteWebhook();
-
 if (process.env.ENVIRONMENT !== 'production') {
   development(bot);
 } else {
-  bot.telegram.deleteWebhook().then(() => {
-    bot.launch();
-  });
+  // Solo inicia el bot en producción
+  //bot.launch();
 }
 
 export const startVercel = async (req: VercelRequest, res: VercelResponse) => {
