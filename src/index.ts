@@ -88,6 +88,35 @@ const paymentWizard = new Scenes.WizardScene<MyContext>(
   }
 );
 
+bot.action('yes', async (ctx) => {
+  const myCtx = ctx as unknown as MyContext; // Conversión doble
+  await myCtx.reply('Has seleccionado Sí. Elige tu método de pago:');
+  return myCtx.wizard.selectStep(2);
+});
+
+bot.action('no', async (ctx) => {
+  const myCtx = ctx as unknown as MyContext; // Conversión doble
+  await myCtx.reply('Has seleccionado No. Por favor, realiza el pago para continuar.');
+  return myCtx.scene.leave();
+});
+
+bot.action('paypal', async (ctx) => {
+  const myCtx = ctx as unknown as MyContext; // Conversión doble
+  await myCtx.reply('Has seleccionado Paypal. Por favor, ingresa tus datos.');
+  return myCtx.wizard.selectStep(3);
+});
+
+bot.action('mercadopago', async (ctx) => {
+  const myCtx = ctx as unknown as MyContext; // Conversión doble
+  await myCtx.reply('Has seleccionado MercadoPago. Por favor, ingresa tus datos.');
+  return myCtx.wizard.selectStep(3);
+});
+
+bot.action('patreon', async (ctx) => {
+  const myCtx = ctx as unknown as MyContext; // Conversión doble
+  await myCtx.reply('Has seleccionado Patreon. Por favor, ingresa tus datos.');
+  return myCtx.wizard.selectStep(3);
+});
 
 bot.use(session());
 const stage = new Scenes.Stage<MyContext>([paymentWizard], { default: 'payment-wizard' });
