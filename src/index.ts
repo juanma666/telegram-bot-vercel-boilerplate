@@ -106,8 +106,16 @@ bot.use(rateLimit(1, 5000)); // Limita a 1 solicitud cada 5 segundos
 
 bot.action('yes', async (ctx) => {
   const myCtx = ctx as unknown as MyContext; // Conversión doble
-  await myCtx.reply('Has seleccionado Sí. Elige tu método de pago:');
-  return myCtx.wizard.selectStep(2);
+  await myCtx.reply(
+    'Has seleccionado Sí. Por favor, selecciona el método de pago que utilizaste:',
+    Markup.inlineKeyboard([
+      Markup.button.callback('Paypal', 'paid_paypal'),
+      Markup.button.callback('MercadoPago', 'paid_mercadopago'),
+      Markup.button.callback('Patreon', 'paid_patreon')
+    ])
+  );
+  // Asumiendo que quieres mantener el usuario en el mismo paso del asistente
+  return myCtx.wizard.selectStep(myCtx.wizard.cursor);
 });
 
 bot.action('no', async (ctx) => {
@@ -132,6 +140,28 @@ bot.action('patreon', async (ctx) => {
   const myCtx = ctx as unknown as MyContext; // Conversión doble
   await myCtx.reply('Has seleccionado Patreon. Por favor, ingresa tus datos.');
   return myCtx.wizard.selectStep(3);
+});
+
+bot.action('paid_paypal', async (ctx) => {
+  const myCtx = ctx as unknown as MyContext;
+  await myCtx.reply('Has indicado que pagaste con Paypal. Procederemos a verificar tu pago.');
+  // Aquí puedes añadir lógica para manejar la verificación de pago con Paypal
+  // Por ejemplo, pasar al siguiente paso del asistente
+  return myCtx.wizard.next();
+});
+
+bot.action('paid_mercadopago', async (ctx) => {
+  const myCtx = ctx as unknown as MyContext;
+  await myCtx.reply('Has indicado que pagaste con MercadoPago. Procederemos a verificar tu pago.');
+  // Lógica similar para MercadoPago
+  return myCtx.wizard.next();
+});
+
+bot.action('paid_patreon', async (ctx) => {
+  const myCtx = ctx as unknown as MyContext;
+  await myCtx.reply('Has indicado que pagaste con Patreon. Procederemos a verificar tu pago.');
+  // Lógica similar para Patreon
+  return myCtx.wizard.next();
 });
 
 bot.use(session());
